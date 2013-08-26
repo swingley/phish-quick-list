@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title></title>
+    <style>
+      * { 
+        box-sizing: border-box 
+      }
+      html {
+        width: 100%;
+      }
+      body {
+        font-family: sans-serif;
+        height: 100%;
+        margin: 1em auto;
+        position: relative;
+        width: 21em;
+      }
+      input {
+        font-size: 1.5em;
+        position: absolute;
+        text-align: center;
+        margin-left: -1.5em;
+        width: 3em;
+      }
+      input:nth-child(1) {
+        left: 25%;
+      }
+      input:nth-child(2) {
+        left: 50%;
+      }
+      input:nth-child(3) {
+        left: 75%;
+      }
+      div#setlist {
+        font-size: 1.5em;
+        margin: 1.5em 0 1.5em 0;
+        text-align: center;
+      }
+      @media only screen 
+      and (min-device-width : 320px) 
+      and (max-device-width : 480px) {
+        body {
+          width: 100%;
+        }
+        input {
+          font-size: 4em;
+          top: 1em;
+        }
+        div#setlist {
+          font-size: 3em;
+          line-height: 1.5em;
+          margin: 4em 0 4em 0;
+        }
+      }
+    </style>
+
+  </head>
+  <body>
+    <input id="month" type="tel">
+    <input id="day" type="tel">
+    <input id="year" type="tel">
+    <br>
+    <div id="setlist">
+      Enter a mm/dd/yy date.
+      <br><br>
+      Phish setlist will appear here.
+    </div>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+    <script>
+      (function() {
+        var month = $("input#month");
+        var day = $("input#day");
+        var year = $("input#year");
+        var setlist = $("div#setlist");
+        month.focus();
+        $("body").keyup(checkInput);
+
+        var current, show; // keep track of currently displayed show
+
+        // end point for phish.net API
+        var urlBase = "http://api.phish.net/api.js?api=2.0&method=pnet.shows.setlists.get&format=json&apikey=259AAE8C0E61C20D6CC3&callback=?&showdate=";
+
+        function checkInput() {
+          var mVal = parseInt(month.val());
+          var dVal = parseInt(day.val());
+          var yVal = year.val();
+          // console.log(mVal, dVal, yVal, !mVal, !dVal, !(yVal+1));
+
+          // if any values are NaN, return
+          // year can be 0 for year 2000, add one so
+          // test below doesn't result in a false positive
+          if ( !mVal || !dVal || !(yVal +1) ) {
+            return;
+          }
+          
+          // check month
+          if ( mVal < 0 || mVal > 12 ) {
+            setlist.html("Bad month.");
+            return;
+          }
+          // check day
+          if ( dVal < 0 || dVal > 31) {
+            setlist.html("Invalid day.");
+            return;
+          }
+          // check year
+          if ( yVal.length !== 2 ) {
+            return;
+          }
+          if ( parseInt(yVal) > 13 && parseInt(yVal) < 83 ) {
+            setlist.html("Invalid year.");
+            return;
+          }
+          show = format(mVal, dVal, yVal);
+          if ( show === current ) {
+            // console.log("same show!");
+            return;
+          }
+          console.log("new show date", show);
+          $.getJSON(urlBase + show, phish);
+        }
+
+        function phish(data) {
+          console.log("setlist:  ", data);
+          current = show;
+          if ( data.hasOwnProperty("success") || data.success === 0 ) {
+            setlist.html("No setlist found.");
+            return;
+          }
+          setlist.html(
+            data[0].venue + ", " + data[0].city + ", " + data[0].state + 
+            data[0].setlistdata + data[0].setlistnotes + 
+            "<br><br><a href=\"" + data[0].url + "\">View on phish.net</a>"
+          );
+          // call blur on element with focus to hide keyboard on mobile devices
+          //
+          // http://stackoverflow.com/a/3540295/1934
+          if ( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+            document.activeElement.blur();
+          }
+        }
+
+        function format(m, d, y) {
+          if ( m.toString().length === 1 ) {
+            m = addLeadingZero(m);
+          }
+          if ( d.toString().length === 1 ) {
+            d = addLeadingZero(d);
+          }
+          if ( y.toString().length === 1 ){
+            y = addLeadingZero(y);
+          }
+          return y + "-" + m + "-" + d;
+        }
+
+        function addLeadingZero(v) {
+          return "0" + v;
+        }
+      })();
+    </script>
+  </body>
+</html>
