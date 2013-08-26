@@ -75,13 +75,54 @@
         var day = $("input#day");
         var year = $("input#year");
         var setlist = $("div#setlist");
+        var numbers = "0123456789";
+        var tens = "0123";
+
+        // start in the month input
         month.focus();
+
+        // these fit a specific use case...
+        // if someone is entering two numbers in each box
+        // automatically move them along to make this as fast a possible
+        // these event listeners are disconnected after they fire once
+        var monthKeyup = month.keyup(checkMonth);
+        var dayKeyup = day.keyup(checkDay);
+
         $("body").keyup(checkInput);
 
         var current, show; // keep track of currently displayed show
 
         // end point for phish.net API
         var urlBase = "http://api.phish.net/api.js?api=2.0&method=pnet.shows.setlists.get&format=json&apikey=259AAE8C0E61C20D6CC3&callback=?&showdate=";
+
+        // event listener to check whether or not focus should be moved
+        // from the month input to the day input
+        // disconnect the keyup listener when moved to the day input
+        function checkMonth(e) {
+          // console.log("checkMonth", this.value);
+          if ( this.value === "0" || this.value === "1" ) {
+            return;
+          }
+          if ( this.value.length === 2 &&
+               numbers.indexOf(this.value[0]) > -1 && 
+               numbers.indexOf(this.value[1]) > -1 ) {
+            day.focus();
+            month.unbind("keyup");
+            // console.log("unbind month");
+          }
+        }
+        // same as checkMonth, disconnect after valid day is entered
+        function checkDay(e) {
+          if ( tens.indexOf(this.value) > -1 ) {
+            return;
+          }
+          if ( this.value.length === 2 &&
+               tens.indexOf(this.value[0]) > -1 &&
+               numbers.indexOf(this.value[1] > -1 ) ) {
+            day.unbind("keyup");
+            year.focus();
+          }
+        }
 
         function checkInput() {
           var mVal = parseInt(month.val());
@@ -92,7 +133,7 @@
           // if any values are NaN, return
           // year can be 0 for year 2000, add one so
           // test below doesn't result in a false positive
-          if ( !mVal || !dVal || !(yVal +1) ) {
+          if ( !mVal || !dVal || !(yVal + 1) ) {
             return;
           }
           
@@ -107,7 +148,7 @@
             return;
           }
           // check year
-          if ( yVal.length !== 2 ) {
+          if ( yVal.length === 0 || yVal.length > 2 ) {
             return;
           }
           if ( parseInt(yVal) > 13 && parseInt(yVal) < 83 ) {
@@ -119,12 +160,12 @@
             // console.log("same show!");
             return;
           }
-          console.log("new show date", show);
+          // console.log("new show date", show);
           $.getJSON(urlBase + show, phish);
         }
 
         function phish(data) {
-          console.log("setlist:  ", data);
+          // console.log("setlist:  ", data);
           current = show;
           if ( data.hasOwnProperty("success") || data.success === 0 ) {
             setlist.html("No setlist found.");
