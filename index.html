@@ -77,20 +77,24 @@
         var setlist = $("div#setlist");
         var numbers = "0123456789";
         var tens = "0123";
+        var current, show; // keep track of currently displayed show
+        var touchDevice = is_touch_device();
 
         // start in the month input
+        // doesn't work in mobile safari, unfortunately
         month.focus();
 
         // these fit a specific use case...
         // if someone is entering two numbers in each box
         // automatically move them along to make this as fast a possible
         // these event listeners are disconnected after they fire once
-        var monthKeyup = month.keyup(checkMonth);
-        var dayKeyup = day.keyup(checkDay);
+        // only use on non-touch devices
+        if ( !touchDevice ) {
+          var monthKeyup = month.keyup(checkMonth);
+          var dayKeyup = day.keyup(checkDay);
+        }
 
         $("body").keyup(checkInput);
-
-        var current, show; // keep track of currently displayed show
 
         // end point for phish.net API
         var urlBase = "http://api.phish.net/api.js?api=2.0&method=pnet.shows.setlists.get&format=json&apikey=259AAE8C0E61C20D6CC3&callback=?&showdate=";
@@ -168,7 +172,9 @@
           // console.log("setlist:  ", data);
           current = show;
           if ( data.hasOwnProperty("success") || data.success === 0 ) {
-            setlist.html("No setlist found.");
+            var ydm = show.split("-");
+            var mmddyy = ydm[1] + "/" + ydm[2] + "/" + ydm[0];
+            setlist.html("No setlist found for " + mmddyy + ".");
             return;
           }
           setlist.html(
@@ -200,6 +206,12 @@
         function addLeadingZero(v) {
           return "0" + v;
         }
+
+        // http://stackoverflow.com/a/4819886/1934
+        function is_touch_device() {
+          return !!('ontouchstart' in window) // works on most browsers 
+              || !!('onmsgesturechange' in window); // works on ie10
+        };
       })();
     </script>
     <script>
