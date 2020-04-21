@@ -4,8 +4,8 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title></title>
     <style>
-      * { 
-        box-sizing: border-box 
+      * {
+        box-sizing: border-box
       }
       html {
         width: 100%;
@@ -38,8 +38,8 @@
         margin: 1.5em 0 1.5em 0;
         text-align: center;
       }
-      @media only screen 
-      and (min-device-width : 320px) 
+      @media only screen
+      and (min-device-width : 320px)
       and (max-device-width : 480px) {
         body {
           width: 100%;
@@ -81,6 +81,8 @@
         var touchDevice = is_touch_device();
         // end point for phish.net API
         var urlBase = "//api.phish.net/api.js?api=2.0&method=pnet.shows.setlists.get&format=json&apikey=259AAE8C0E61C20D6CC3&callback=?&showdate=";
+        var currentYear = +new Date().getFullYear().toString().slice(-2)
+        var firstYear = 83
 
         // if url has a hash, assume it's a date and try to load that show
         if ( window.location.hash ) {
@@ -117,7 +119,7 @@
             return;
           }
           if ( this.value.length === 2 &&
-               numbers.indexOf(this.value[0]) > -1 && 
+               numbers.indexOf(this.value[0]) > -1 &&
                numbers.indexOf(this.value[1]) > -1 ) {
             day.focus();
             month.unbind("keyup");
@@ -149,7 +151,7 @@
           if ( !mVal || !dVal || !(yVal + 1) ) {
             return;
           }
-          
+
           // check month
           if ( mVal < 0 || mVal > 12 ) {
             setlist.html("Bad month.");
@@ -164,7 +166,7 @@
           if ( yVal.length === 0 || yVal.length > 2 ) {
             return;
           }
-          if ( parseInt(yVal) > 16 && parseInt(yVal) < 83 ) {
+          if (parseInt(yVal) > currentYear && parseInt(yVal) < firstYear) {
             setlist.html("Bad year.");
             return;
           }
@@ -187,8 +189,8 @@
             return;
           }
           setlist.html(
-            data[0].venue + ", " + data[0].city + ", " + data[0].state + 
-            data[0].setlistdata + data[0].setlistnotes + 
+            data[0].venue + ", " + data[0].city + ", " + data[0].state +
+            data[0].setlistdata + data[0].setlistnotes +
             "<br><br><a href=\"" + data[0].url + "\">View on phish.net</a>"
           );
           // call blur on element with focus to hide keyboard on mobile devices
@@ -218,7 +220,7 @@
 
         // http://stackoverflow.com/a/4819886/1934
         function is_touch_device() {
-          return !!('ontouchstart' in window) // works on most browsers 
+          return !!('ontouchstart' in window) // works on most browsers
               || !!('onmsgesturechange' in window); // works on ie10
         };
       })();
