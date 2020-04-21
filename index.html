@@ -68,7 +68,6 @@
       Phish setlist will appear here.
     </div>
 
-    <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script> -->
     <script>
       (function() {
         const month = document.getElementById('month')
@@ -79,20 +78,41 @@
         const tens = '0123'
         let current
         let show // keep track of currently displayed show
-        const touchDevice = is_touch_device()
         // end point for phish.net API
-        // const urlBase = '//api.phish.net/api.js?api=2.0&method=pnet.shows.setlists.get&format=json&apikey=259AAE8C0E61C20D6CC3&callback=?&showdate='
         const urlBase = 'https://api.phish.net/v3/setlists/get?apikey=259AAE8C0E61C20D6CC3&showdate='
         const currentYear = +new Date().getFullYear().toString().slice(-2)
         const firstYear = 83
 
+        // adapted from https://stackoverflow.com/a/13045312/1934
+        const JSONP = {
+          get: function(src, options) {
+            const { callbackName, success, timeout, timeoutThreshold } = options
+            const timeoutHandle = window.setTimeout(function() {
+              window[callbackName] = function() {}
+              timeout();
+            }, timeoutThreshold * 1000);
+
+            window[callbackName] = function(data) {
+              window.clearTimeout(timeoutHandle)
+              success(data);
+            }
+
+            const script = document.createElement('script')
+            script.type = 'text/javascript'
+            script.async = true
+            script.src = src
+            document.getElementsByTagName('head')[0].appendChild(script)
+          }
+        }
+
         // if url has a hash, assume it's a date and try to load that show
         if (window.location.hash) {
+          // console.log('HASH', window.location.hash)
           // linked to specific show...popuplate inputs
-          var mmddyy = window.location.hash.replace('#', '').split('-')
-          month.value(mmddyy[0])
-          day.value(mmddyy[1])
-          year.value(mmddyy[2])
+          const mmddyy = window.location.hash.replace('#', '').split('-')
+          month.value = +mmddyy[0]
+          day.value = +mmddyy[1]
+          year.value = +mmddyy[2]
           checkInput()
         } else {
           // start in the month input
@@ -105,11 +125,10 @@
         // automatically move them along to make this as fast a possible
         // these event listeners are disconnected after they fire once
         // only use on non-touch devices
-        if (!touchDevice) {
+        if (!('ontouchstart' in window)) {
           const monthKeyup = month.addEventListener('keyup', checkMonth)
           const dayKeyup = day.addEventListener('keyup', checkDay)
         }
-
         document.body.addEventListener('keyup', checkInput)
 
         // event listener to check whether or not focus should be moved
@@ -140,7 +159,7 @@
           }
         }
 
-        async function checkInput() {
+        function checkInput() {
           const mVal = parseInt(month.value)
           const dVal = parseInt(day.value)
           const yVal = year.value
@@ -190,19 +209,21 @@
           console.log('response:', json);
           console.log('show:', show);
           current = show
+          const ydm = show.split('-')
+          const mmddyy = `${ydm[1]}-${ydm[2]}-${ydm[0].slice(-2)}`
           if (json.error_code || json.response.data.length === 0) {
-            var ydm = show.split('-')
-            var mmddyy = `${ydm[1]}/${ydm[2]}/${ydm[0].slice(-2)}`
             setlist.innerHTML = `No setlist found for ${mmddyy}.`
             return
           }
           const [ info ] = json.response.data
           const { venue, location, setlistdata, setlistnotes, url } = info
+          const rawr = `http://rawr.gr/pql#${mmddyy}`
           setlist.innerHTML = `
             ${venue}, ${location}
             ${setlistdata}
             ${setlistnotes}
             <br><br><a href="${url}">View on phish.net</a>
+            <br><br><a href="${rawr}">${rawr}</a>
           `
           // call blur on element with focus to hide keyboard on mobile devices
           //
@@ -233,47 +254,6 @@
         function addLeadingZero(v) {
           return `0${v}`
         }
-
-        // http://stackoverflow.com/a/4819886/1934
-        function is_touch_device() {
-          return !!('ontouchstart' in window) // works on most browsers
-              || !!('onmsgesturechange' in window); // works on ie10
-        }
-      })()
-
-      // adapted from https://stackoverflow.com/a/13045312/1934
-      const JSONP = (function(){
-        return {
-          get: function(src, options) {
-            const { callbackName, success, timeout, timeoutThreshold } = options
-            const timeoutHandle = window.setTimeout(function() {
-              window[callbackName] = function() {}
-              timeout();
-            }, timeoutThreshold * 1000);
-
-            window[callbackName] = function(data) {
-              window.clearTimeout(timeoutHandle)
-              success(data);
-            }
-
-            const script = document.createElement('script')
-            script.type = 'text/javascript'
-            script.async = true
-            script.src = src
-            document.getElementsByTagName('head')[0].appendChild(script)
-          }
-        }
-      })()
-    </script>
-    <script>
-      var _gaq = _gaq || []
-      _gaq.push(['_setAccount', 'UA-43512106-1'])
-      _gaq.push(['_trackPageview'])
-
-      (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js'
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s)
       })()
     </script>
   </body>
