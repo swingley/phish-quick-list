@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title></title>
+    <style>
+      * {
+        box-sizing: border-box
+      }
+      html {
+        width: 100%;
+      }
+      body {
+        font-family: sans-serif;
+        height: 100%;
+        margin: 1em auto;
+        position: relative;
+        width: 21em;
+      }
+      div.setlist {
+        font-size: 1.5em;
+        margin: 1.5em 0 1.5em 0;
+        text-align: center;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      /* .container {
+        width: 10em;
+        margin: 0 auto;
+      } */
+
+      .when {
+        line-height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .date {
+        padding: 0.25em;
+      }
+
+      .selected {
+        background-color: rgb(255, 255, 193)
+      }
+
+      .row {
+        display: flex;
+        justify-content: space-evenly;
+        font-family: sans-serif;
+      }
+
+      .key {
+        color: #111;
+        margin: 5px;
+        width: 3em;
+        height: 3em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .neumorphic {
+        background: linear-gradient(
+          -45deg,
+          rgba(0, 0, 0, 0.2),
+          rgba(255, 255, 255, 0.3)
+        );
+        border: none;
+        width: 3em;
+        height: 3em;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      button.neumorphic:active {
+        background: linear-gradient(
+          -45deg,
+          rgba(0, 0, 0, 0.2),
+          rgba(255, 255, 255, 0.3)
+        );
+        box-shadow: inset 6px 6px 10px 0 rgba(0, 0, 0, 0.2),
+          inset -6px -6px 10px 0 rgba(255, 255, 255, 0.5);
+        border: none;
+      }
+
+
+      button.neumorphic:focus {
+        outline: 0;
+      }
+
+      @media only screen
+      and (min-device-width : 320px)
+      and (max-device-width : 480px) {
+        body {
+          width: 100%;
+        }
+        input {
+          font-size: 4em;
+          top: 1em;
+        }
+        div.setlist {
+          font-size: 3em;
+          line-height: 1.5em;
+          margin: 4em 0 4em 0;
+        }
+      }
+    </style>
+
+  </head>
+  <body>
+    <div class='container'>
+      <div class='when row'>
+        <span class='date date-m1'>m</span>
+        <span class='date date-m2'>m</span>
+        <span class='separator'>/</span>
+        <span class='date date-d1'>d</span>
+        <span class='date date-d2'>d</span>
+        <span class='separator'>/</span>
+        <span class='date date-y1'>y</span>
+        <span class='date date-y2'>y</span>
+      </div>
+      <div class='number-pad'>
+        <div class='row'>
+          <button value='1' class='key neumorphic'>1</button>
+          <button value='2' class='key neumorphic'>2</button>
+          <button value='3' class='key neumorphic'>3</button>
+        </div>
+        <div class='row'>
+          <button value='4' class='key neumorphic'>4</button>
+          <button value='5' class='key neumorphic'>5</button>
+          <button value='6' class='key neumorphic'>6</button>
+        </div>
+        <div class='row'>
+          <button value='7' class='key neumorphic'>7</button>
+          <button value='8' class='key neumorphic'>8</button>
+          <button value='9' class='key neumorphic'>9</button>
+        </div>
+        <div class='row'>
+          <button value='b' class='key neumorphic'>←</button>
+          <button value='0' class='key neumorphic'>0</button>
+          <button value='f' class='key neumorphic'>→</button>
+        </div>
+      </div>
+
+      <div class='setlist'></div>
+    </div>
+
+    <script>
+      (function() {
+        let datePosition = 0
+        const dateContainer = document.querySelector('div.row.when')
+        const dateReferences = document.querySelectorAll('span.date')
+        const setlist = document.querySelector('.setlist')
+        const numberPad = document.querySelector('.number-pad')
+        let highlightedPosition = dateReferences[0]
+        highlightedPosition.classList.add('selected')
+
+        let current
+        let show // keep track of currently displayed show
+        // end point for phish.net API
+        const urlBase = 'https://api.phish.net/v3/setlists/get?apikey=259AAE8C0E61C20D6CC3&showdate='
+        const currentYear = +new Date().getFullYear().toString().slice(-2)
+        const firstYear = 83
+
+        // adapted from https://stackoverflow.com/a/13045312/1934
+        const JSONP = {
+          get: function(src, options) {
+            const { callbackName, success, timeout, timeoutThreshold } = options
+            const timeoutHandle = window.setTimeout(function() {
+              window[callbackName] = function() {}
+              timeout();
+            }, timeoutThreshold * 1000);
+
+            window[callbackName] = function(data) {
+              window.clearTimeout(timeoutHandle)
+              success(data);
+            }
+
+            const script = document.createElement('script')
+            script.type = 'text/javascript'
+            script.async = true
+            script.src = src
+            document.getElementsByTagName('head')[0].appendChild(script)
+          }
+        }
+
+        // if url has a hash, assume it's a date and try to load that show
+        // if (window.location.hash) {
+        //   // console.log('HASH', window.location.hash)
+        //   // linked to specific show...popuplate inputs
+        //   const mmddyy = window.location.hash.replace('#', '').split('-')
+        //   month.value = +mmddyy[0]
+        //   day.value = +mmddyy[1]
+        //   year.value = +mmddyy[2]
+        //   checkInput()
+        // } else {
+        //   // start in the month input
+        //   // doesn't work in mobile safari, unfortunately
+        //   month.focus()
+        // }
+
+        // these fit a specific use case...
+        // if someone is entering two numbers in each box
+
+        const updateSelection = () => {
+          if (datePosition > dateReferences.length - 1) {
+            datePosition = 0
+          }
+          if (datePosition < 0) {
+            datePosition = dateReferences.length - 1
+          }
+          highlightedPosition.classList.remove('selected')
+          highlightedPosition = dateReferences[datePosition]
+          highlightedPosition.classList.add('selected')
+          check()
+        }
+
+        function format(m, d, y) {
+          if ( m.toString().length === 1 ) {
+            m = addLeadingZero(m);
+          }
+          if ( d.toString().length === 1 ) {
+            d = addLeadingZero(d);
+          }
+          if ( y.toString().length === 1 ){
+            y = addLeadingZero(y)
+          }
+          if (+y < currentYear) {
+            y = `20${y}`
+          } else {
+            y = `19${y}`
+          }
+          return y + "-" + m + "-" + d
+        }
+
+        function addLeadingZero(v) {
+          return `0${v}`
+        }
+
+        function setlistLoaded(json) {
+          console.log('response:', json);
+          console.log('show:', show);
+          current = show
+          const ydm = show.split('-')
+          const mmddyy = `${ydm[1]}-${ydm[2]}-${ydm[0].slice(-2)}`
+          if (json.error_code || json.response.data.length === 0) {
+            setlist.innerHTML = `No setlist found for ${mmddyy}.`
+            return
+          }
+          const [ info ] = json.response.data
+          const { venue, location, setlistdata, setlistnotes, url } = info
+          console.log('setlist...', info)
+          // const rawr = `http://rawr.gr/pql#${mmddyy}`
+          setlist.innerHTML = `
+            ${venue}, ${location}
+            ${setlistdata}
+            ${setlistnotes}
+            <br><br><a href="${url}">View on phish.net</a>
+          `
+          // call blur on element with focus to hide keyboard on mobile devices
+          //
+          // http://stackoverflow.com/a/3540295/1934
+          // if ( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+          //   document.activeElement.blur();
+          // }
+        }
+
+        const check = () => {
+          const [m, d, y] = dateContainer.innerText.replace(/\s/g, '').split('/').map(val => +val)
+          // if any values are NaN, return
+          // year can be 0 for year 2000, add one so
+          // test below doesn't result in a false positive
+          if (!m || !d || !(y + 1)) {
+            return
+          }
+
+          // check month
+          if (m < 0 || m > 12) {
+            // setlist.innerHTML = 'Bad month.'
+            console.log('BAD MONTH')
+            return
+          }
+          // check day
+          if (d < 0 || d > 31) {
+            // setlist.innerHTML = 'Bad day.'
+            console.log('BAD DAY')
+            return
+          }
+          // check year
+          // TODO:  better year check
+          // if (`${y}`.length !== 2) {
+          //   console.log('BAD YEAR WTFFFFF')
+          //   return
+          // }
+          show = format(m, d, y)
+          if ( show === current ) {
+            // console.log('same show!')
+            return
+          }
+          const showUrl = `${urlBase}${show}`
+          const callbackName = `setlist_${new Date().getTime()}`
+          JSONP.get(`${showUrl}&callback=${callbackName}`, {
+            callbackName,
+            success: setlistLoaded,
+            timeout: () => console.log('timed out...'),
+            timeoutThreshold: 5
+          })
+        }
+
+        document.querySelector('.number-pad').addEventListener('click', e => {
+          if (e.target.value) {
+            switch (e.target.value) {
+              case '0':
+              case '1':
+              case '2':
+              case '3':
+              case '4':
+              case '5':
+              case '6':
+              case '7':
+              case '8':
+              case '9':
+                dateReferences[datePosition].innerHTML = e.target.value
+                datePosition++
+                updateSelection()
+                break
+              case 'f':
+                datePosition++
+                updateSelection()
+                break
+              case 'b':
+                datePosition--
+                updateSelection()
+                break
+            }
+          }
+        })
+      })()
+    </script>
+  </body>
+</html>
