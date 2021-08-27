@@ -226,7 +226,7 @@
           if ( y.toString().length === 1 ){
             y = addLeadingZero(y)
           }
-          if (+y < currentYear) {
+          if (+y <= currentYear) {
             y = `20${y}`
           } else {
             y = `19${y}`
