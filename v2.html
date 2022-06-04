@@ -50,6 +50,10 @@
         font-family: sans-serif;
       }
 
+      .number-pad {
+        margin-top: 10px;
+      }
+
       .key {
         color: #111;
         margin: 5px;
@@ -59,34 +63,77 @@
         touch-action: manipulation;
       }
 
-      .neumorphic {
-        background: linear-gradient(
-          -45deg,
-          rgba(0, 0, 0, 0.2),
-          rgba(255, 255, 255, 0.3)
-        );
-        border: none;
-        width: 66px;
-        height: 3em;
-        font-size: 1.4em;
-        border-radius: 10px;
-        overflow: hidden;
+      /* button styles from:  https://codepen.io/jouanmarcel/pen/RwweKqb */
+      button,
+      [role=button] {
+        -webkit-appearance: none;
+        -webkit-user-select: none;
+          -moz-user-select: none;
+            -ms-user-select: none;
+                user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        outline: none;
+        cursor: pointer;
+        width: 150px;
+        height: 66px;
+        background-image: linear-gradient(to top, #D8D9DB 0%, #fff 80%, #FDFDFD 100%);
+        border-radius: 33px;
+        border: 1px solid #8F9092;
+        box-shadow: 0 4px 3px 1px #FCFCFC, 0 6px 8px #D6D7D9, 0 -4px 4px #CECFD1, 0 -6px 4px #FEFEFE, inset 0 0 3px 0 #CECFD1;
+        transition: all 0.2s ease;
+        font-family: sans-serif;
+        font-size: 24px;
+        color: #606060;
+        text-shadow: 0 1px #fff;
+      }
+      button::-moz-focus-inner,
+      [role=button]::-moz-focus-inner {
+        border: 0;
+      }
+      button > *,
+      [role=button] > * {
+        transition: transform 0.2s ease;
+      }
+      button:hover:not([disabled]),
+      [role=button]:hover:not([disabled]) {
+        box-shadow: 0 4px 3px 1px #FCFCFC, 0 6px 8px #D6D7D9, 0 -4px 4px #CECFD1, 0 -6px 4px #FEFEFE, inset 0 0 3px 3px #CECFD1;
+      }
+      button:hover:not([disabled]) > *,
+      [role=button]:hover:not([disabled]) > * {
+        transform: scale(0.975);
+      }
+      button:focus:not(:active),
+      [role=button]:focus:not(:active) {
+        -webkit-animation: active 0.9s alternate infinite;
+                animation: active 0.9s alternate infinite;
+        outline: none;
+      }
+      button:active:not([disabled]),
+      [role=button]:active:not([disabled]) {
+        box-shadow: 0 4px 3px 1px #FCFCFC, 0 6px 8px #D6D7D9, 0 -4px 4px #CECFD1, 0 -6px 4px #FEFEFE, inset 0 0 5px 3px #999, inset 0 0 30px #aaa;
+      }
+      button:active:not([disabled]) > *,
+      [role=button]:active:not([disabled]) > * {
+        transform: scale(0.95);
       }
 
-      button.neumorphic:active {
-        background: linear-gradient(
-          -45deg,
-          rgba(0, 0, 0, 0.2),
-          rgba(255, 255, 255, 0.3)
-        );
-        box-shadow: inset 6px 6px 10px 0 rgba(0, 0, 0, 0.2),
-          inset -6px -6px 10px 0 rgba(255, 255, 255, 0.5);
-        border: none;
+      @-webkit-keyframes active {
+        from {
+          box-shadow: 0 4px 3px 1px #FCFCFC, 0 6px 8px #D6D7D9, 0 -4px 4px #CECFD1, 0 -6px 4px #FEFEFE, inset 0 0 10px 0px rgba(0, 0, 250, 0.6);
+        }
+        to {
+          box-shadow: 0 4px 3px 1px #FCFCFC, 0 6px 8px #D6D7D9, 0 -4px 4px #CECFD1, 0 -6px 4px #FEFEFE, inset 0 0 3px 3px #CECFD1;
+        }
       }
-
-
-      button.neumorphic:focus {
-        outline: 0;
+      @keyframes active {
+        from {
+          box-shadow: 0 4px 3px 1px #FCFCFC, 0 6px 8px #D6D7D9, 0 -4px 4px #CECFD1, 0 -6px 4px #FEFEFE, inset 0 0 10px 0px rgba(0, 0, 250, 0.6);
+        }
+        to {
+          box-shadow: 0 4px 3px 1px #FCFCFC, 0 6px 8px #D6D7D9, 0 -4px 4px #CECFD1, 0 -6px 4px #FEFEFE, inset 0 0 3px 3px #CECFD1;
+        }
       }
 
       @media only screen
@@ -122,24 +169,24 @@
       </div>
       <div class='number-pad'>
         <div class='row'>
-          <button value='1' class='key neumorphic'>1</button>
-          <button value='2' class='key neumorphic'>2</button>
-          <button value='3' class='key neumorphic'>3</button>
+          <button value='1' class='key'>1</button>
+          <button value='2' class='key'>2</button>
+          <button value='3' class='key'>3</button>
         </div>
         <div class='row'>
-          <button value='4' class='key neumorphic'>4</button>
-          <button value='5' class='key neumorphic'>5</button>
-          <button value='6' class='key neumorphic'>6</button>
+          <button value='4' class='key'>4</button>
+          <button value='5' class='key'>5</button>
+          <button value='6' class='key'>6</button>
         </div>
         <div class='row'>
-          <button value='7' class='key neumorphic'>7</button>
-          <button value='8' class='key neumorphic'>8</button>
-          <button value='9' class='key neumorphic'>9</button>
+          <button value='7' class='key'>7</button>
+          <button value='8' class='key'>8</button>
+          <button value='9' class='key'>9</button>
         </div>
         <div class='row'>
-          <button value='b' class='key neumorphic'>←</button>
-          <button value='0' class='key neumorphic'>0</button>
-          <button value='f' class='key neumorphic'>→</button>
+          <button value='b' class='key'>←</button>
+          <button value='0' class='key'>0</button>
+          <button value='f' class='key'>→</button>
         </div>
       </div>
 
